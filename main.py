@@ -108,13 +108,15 @@ def user_route(user=Depends(RoleChecker(["admin", "manager", "user"]))):
 #3.Nested Dependency
 from fastapi import Header
 
-def get_token(token:str = Header(..., description="Auth Token")):
-    return token
-
-def get_current_user(token: str = Depends(get_token)):
+def get_user_id(token: str = Header(..., description="Auth Token")) -> str:
+    """Extract and validate user ID from token"""
     if token != "ABC":
-        raise HTTPException(status_code=401)
-    return {"user": "Nagesh"}
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return "user_123"  # Extract actual user ID from token
+
+def get_current_user(user_id: str = Depends(get_user_id)) -> dict:
+    """Fetch complete user details using user_id from db"""
+    return {"user_id": user_id, "user": "Nagesh", "role": "admin"}
 
 @app.get("/nested")
 def nested(user=Depends(get_current_user)):
